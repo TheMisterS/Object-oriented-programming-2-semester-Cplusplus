@@ -21,8 +21,17 @@ float Basket::count_total(){
 void Basket::add_product(Product desired_product){
     products.push_back(desired_product);
 }
+Discount::Discount(){
+    next_discount = nullptr;
+}
 float Discount::price_with_discount(Basket desired_basket){
-    return desired_basket.count_total() - discount;
+    if (next_discount != nullptr){
+        return next_discount->price_with_discount(desired_basket);
+    }
+    return desired_basket.count_total();
+}    
+void Discount::set_next_discount(Discount* next){
+    next_discount = next;
 }
 Relative_Discount::Relative_Discount(float desired_max_price, float desired_relative_discount){
     max_price = desired_max_price;
@@ -33,7 +42,7 @@ float Relative_Discount::price_with_discount(Basket desired_basket){
         {
             return desired_basket.count_total() - relative_discount;
         }
-    return desired_basket.count_total();
+    return Discount::price_with_discount(desired_basket);
 }
 Percentage_Discount::Percentage_Discount(float desired_max_price, float desired_relative_discount_percentage){
     max_price = desired_max_price;
@@ -44,7 +53,7 @@ float Percentage_Discount::price_with_discount(Basket desired_basket){
         {
             return desired_basket.count_total() * (1 - percentage_discount / 100);
         }
-    return desired_basket.count_total();
+    return Discount::price_with_discount(desired_basket);
 }
     void Shop::set_catalog(Product desired_product){
         catalog.push_back(desired_product);
@@ -58,15 +67,26 @@ float Percentage_Discount::price_with_discount(Basket desired_basket){
     }
 int main(){
     //Products
-    Product apple(2,"Apple","Fruits");
-    Product orange(2,"Orange","Fruits");
-    Product potato(3.5,"Potato","Vegetables");
-    Product carrot(3.5,"Carrot","Vegetables");
-    Product milk(5,"1L Carton of Milk","Dairy");
-    Product butter(4,"500g of Butter","Dairy");
+    Product apple(50,"Apple","Fruits");
+    Product orange(50,"Orange","Fruits");
+    Product potato(50,"Potato","Vegetables");
+    Product carrot(50,"Carrot","Vegetables");
+    Product milk(25,"1L Carton of Milk","Dairy");
+    Product butter(25,"500g of Butter","Dairy");
     //Discounts
-    Relative_Discount ten_relative(10,5);
-    Percentage_Discount ten_percentage(10,10);
+    Relative_Discount three_relative(300,30);
+    Relative_Discount two_relative(200,20);
+    Relative_Discount one_relative(100,10);
+    Percentage_Discount three_percentage(300,30);
+    Percentage_Discount two_percentage(200,20);
+    Percentage_Discount one_percentage(100,10);
+
+    three_relative.set_next_discount(&two_relative);
+    two_relative.set_next_discount(&one_relative);
+
+    three_percentage.set_next_discount(&two_percentage);
+    two_percentage.set_next_discount(&one_percentage);
+
     //Shop & Basket
     Basket MyBasket;
     Shop MyShop;
@@ -77,10 +97,10 @@ int main(){
     MyBasket.add_product(carrot);
     MyBasket.add_product(milk);
     MyBasket.add_product(butter);
-    MyShop.set_discount_type(&ten_percentage);
+    cout << "Your basket's cost without discounts: " << MyBasket.count_total() << endl;
+    MyShop.set_discount_type(&three_percentage);
     cout << "Using our percentage discount you would pay: " << MyShop.check_discount_price(MyBasket) << endl;
-    MyShop.set_discount_type(&ten_relative);
+    MyShop.set_discount_type(&three_relative);
     cout << "Using our relative discount you would pay: " << MyShop.check_discount_price(MyBasket) << endl;
-
     return 0;
 }

@@ -17,10 +17,11 @@ class Basket{
     void add_product(Product desired_product);
 };
 class Discount{
-    float discount;
     Discount* next_discount;
  public:
+    Discount();
     virtual float price_with_discount(Basket desired_basket);
+    void set_next_discount(Discount* next);
 };
 class Relative_Discount : public Discount{
     float max_price, relative_discount;
